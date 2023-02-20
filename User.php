@@ -11,6 +11,7 @@ private $id;
  public $firstname;
 public $lastname;
 public $mysqli;
+private $password;
 public $_SESSION;
 
 
@@ -23,9 +24,10 @@ public function register($login, $password,
 $email, $firstname,
 $lastname){
     $request=$this->mysqli->query("INSERT INTO `utilisateurs` (`id`, `login`, `password`, `email`, `firstname`, `lastname`) VALUES (NULL, '$login', '$password', '$email', '$firstname', '$lastname');");
-    $request2=$this->mysqli->query("SELECT * FROM utilisateurs ");
-    $result = $request2->fetch_all(MYSQLI_ASSOC);  
+    $result = $request->fetch_all(MYSQLI_ASSOC);  
     $_SESSION = $result[0]; 
+    return $result;
+  
   
 }
 public function connect($login, $password){
@@ -59,30 +61,50 @@ $lastname){
     $request=$this->mysqli->query("UPDATE utilisateurs SET login='$login',password='$password', email='$email', firstname='$firstname',lastname='$lastname' WHERE id='$_SESSION[id]'");
 }
 public function isConnected(){
-    
+    if(!empty($_SESSION)){
+        return ; 
+    }
+
 }
 public function getAllInfos(){
-    
+    $request=$this->mysqli->query("SELECT * FROM utilisateurs WHERE id='$_SESSION[id]'");
+    $result=$request->fetch_all(MYSQLI_ASSOC); 
+   return $result ;
 }
 public function getLogin(){
-    
+    $request=$this->mysqli->query("SELECT login FROM utilisateurs WHERE id='$_SESSION[id]'");
+    $result=$request->fetch_all(MYSQLI_ASSOC); 
+   return $result ;
 }
 public function GetEmail(){
-    
+    $request=$this->mysqli->query("SELECT email FROM utilisateurs WHERE id='$_SESSION[id]'");
+    $result=$request->fetch_all(MYSQLI_ASSOC); 
+   return $result ;
 }
 public function getFirstname(){
-    
+    $request=$this->mysqli->query("SELECT firstname FROM utilisateurs WHERE id='$_SESSION[id]'");
+    $result=$request->fetch_all(MYSQLI_ASSOC); 
+   return $result ;
 }
-public function getLastName(){}
+public function getLastName(){
+    $request=$this->mysqli->query("SELECT lastname FROM utilisateurs WHERE id='$_SESSION[id]'");
+    $result=$request->fetch_all(MYSQLI_ASSOC); 
+   return $result ;
+}
 }
 
 $user=new User();
-// $user->register('cam','cam', 'cam@', 'cam', 'cam');
-// $user->register('cam1','cam1', 'cam1@', 'cam1', 'cam1');
-// $user->register('cam2','cam2', 'cam2@', 'cam2', 'cam2');
-$user->connect('cam2','cam2');
+
+// $user->register('cam6','cam6', 'cam@6', 'cam6', 'cam6');
+// $user->register('cam11','cam11', 'cam11@', 'cam11', 'cam11');
+// $user->register('cam2222','cam222', 'cam222@', 'cam222', 'cam222');
+$user->connect('cam222','cam222');
+
+
 // $user->disconnect();
 // $user->delete();
 // $user->update('cam20', 'cam20', 'cam20@', 'cam20', 'cam20' )
+$user->getLogin();
+// $user->getAllInfos();
 
 ?>
