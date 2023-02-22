@@ -36,6 +36,8 @@ $result=$request->fetch_all(MYSQLI_ASSOC);
 if(mysqli_num_rows($request) == 0){
     $message = "votre login ou mdp est incorrect";}
     else{
+        // $_SESSION['login'] = $login;
+        // $_SESSION['password'] = $password;
         $_SESSION = $result[0];
 $message = "vous etes connecté";
     }
@@ -60,11 +62,12 @@ $email, $firstname,
 $lastname){
     $request=$this->mysqli->query("UPDATE utilisateurs SET login='$login',password='$password', email='$email', firstname='$firstname',lastname='$lastname' WHERE id='$_SESSION[id]'");
 }
-public function isConnected(){
-    if(!empty($_SESSION)){
-        return ; 
+public function isConnected() {
+    if (isset($_SESSION['login'])) {
+        return true;
+    } else {
+        return false;
     }
-
 }
 public function getAllInfos(){
     $request=$this->mysqli->query("SELECT * FROM utilisateurs WHERE id='$_SESSION[id]'");

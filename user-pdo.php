@@ -1,6 +1,5 @@
 <?php
-
-
+session_start();
 class UserPDO
 {
     // les atributs
@@ -11,7 +10,7 @@ class UserPDO
     public $lastname;
     public $mysqli;
     private $password;
-    public $_SESSION;
+   
 
 
     // methodes
@@ -20,8 +19,9 @@ class UserPDO
         $username="root";
         $password="";
         try{
-            $this->bd = new PDO("mysql:host=localhost;dbname=classes;charset=utf8mb4", $username, $password); 
-            // sans le charset, la bdd ne se connecte pas
+            $this->bd = new PDO("mysql:host=localhost;dbname=classes;charset=utf8mb4", $username, $password);
+            // $this->bd = new PDO("mysql:host=localhost;dbname=classes;charset=utf8mb4", "root", ""); marche aussi
+            // même sans le charset, la bdd ne se connecte pas
             $this->bd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             echo "Connected successfully";
         }catch (PDOException $e){
@@ -30,26 +30,31 @@ class UserPDO
         
 
     }
-    public function register(
-        $login,
-        $password,
-        $email,
-        $firstname,
-        $lastname
-    ) {
-        $request = $this->bd->query('INSERT INTO `utilisateurs` (id, login, password, email, firstname, lastname) VALUES (NULL, "$login", "$password", "$email", "$firstname", "$lastname");');
-        $result = $request->fetch_all(MYSQLI_ASSOC);
-        $_SESSION = $result[0];
+    public function register($login,
+    $password,
+    $email,
+    $firstname,
+    $lastname){
+        $req = $this->bd->prepare("INSERT INTO utilisateurs(login,password,email,firstname,lastname)VALUES(?,?,?,?,?)");
+        $req->execute([$login, $password, $email, $firstname, $lastname]);
+
+        $req2 = $this->bd->prepare("SELECT * FROM utilisateurs WHERE id = ?");
+        $req2->execute([$_SESSION['login']]);
+        $result = $req2->fetchAll(PDO::FETCH_ASSOC);
+        // var_dump($result);
         return $result;
+    
     }
     public function connect($login, $password)
     {
-        $request = $this->$bd->query("SELECT * FROM utilisateurs WHERE login='$login' AND password='$password'");
-        $result = $request->fetch_all(MYSQLI_ASSOC);
-        if (mysqli_num_rows($request) == 0) {
+        $req=$this->bd->prepare("select * from utilisateurs where login=? and password=?");
+        $req->execute([$login, $password]);
+        $count = $req->rowCount();
+        if ($count == 0) {
             $message = "votre login ou mdp est incorrect";
         } else {
-            $_SESSION = $result[0];
+            $_SESSION['login'] = $login;
+            $_SESSION['password'] = $password;
             $message = "vous etes connecté";
         }
         echo $message;
@@ -63,7 +68,8 @@ class UserPDO
     }
     public function delete()
     {
-        $request = $this->mysqli->query("DELETE FROM utilisateurs WHERE id='$_SESSION[id]' ");
+        $req=$this->bd->prepare("delete from utilisateurs where login=?");
+        $req->execute([$_SESSION['login']]);
         session_destroy();
         echo " Vous avez été delete";
         exit;
@@ -75,56 +81,73 @@ class UserPDO
         $firstname,
         $lastname
     ) {
-        $request = $this->mysqli->query("UPDATE utilisateurs SET login='$login',password='$password', email='$email', firstname='$firstname',lastname='$lastname' WHERE id='$_SESSION[id]'");
+        $req=$this->bd->prepare("UPDATE utilisateurs SET login=?, password=?, email=?, firstname=?, lastname=? WHERE login = ?");
+        $req->execute([$login, $password, $email, $firstname, $lastname, $_SESSION['login']]);
     }
     public function isConnected()
     {
-        if (!empty($_SESSION)) {
-            return;
+        if (isset($_SESSION['login'])) {
+            return true;
+        } else {
+            return false;
         }
     }
     public function getAllInfos()
     {
-        $request = $this->mysqli->query("SELECT * FROM utilisateurs WHERE id='$_SESSION[id]'");
-        $result = $request->fetch_all(MYSQLI_ASSOC);
-        return $result;
+        $req = $this->bd->prepare("SELECT * FROM utilisateurs WHERE login = ?");
+        $req->execute([$_SESSION['login']]);
+        $result = $req->fetchAll(PDO::FETCH_ASSOC);
+        var_dump($result);
+        return $result;;
     }
     public function getLogin()
     {
-        $request = $this->mysqli->query("SELECT login FROM utilisateurs WHERE id='$_SESSION[id]'");
-        $result = $request->fetch_all(MYSQLI_ASSOC);
-        return $result;
+        $req = $this->bd->prepare("SELECT * FROM utilisateurs WHERE login = ?");
+        $req->execute([$_SESSION['login']]);
+        $result = $req->fetchAll(PDO::FETCH_ASSOC);
+        var_dump($result[0]['login']);
+        return $result[0]['login'];
     }
     public function GetEmail()
     {
-        $request = $this->mysqli->query("SELECT email FROM utilisateurs WHERE id='$_SESSION[id]'");
-        $result = $request->fetch_all(MYSQLI_ASSOC);
-        return $result;
+        $req = $this->bd->prepare("SELECT * FROM utilisateurs WHERE login = ?");
+        $req->execute([$_SESSION['login']]);
+        $result = $req->fetchAll(PDO::FETCH_ASSOC);
+        var_dump($result[0]['email']);
+        return $result[0]['email'];
     }
     public function getFirstname()
     {
-        $request = $this->mysqli->query("SELECT firstname FROM utilisateurs WHERE id='$_SESSION[id]'");
-        $result = $request->fetch_all(MYSQLI_ASSOC);
-        return $result;
+        $req = $this->bd->prepare("SELECT * FROM utilisateurs WHERE login = ?");
+        $req->execute([$_SESSION['login']]);
+        $result = $req->fetchAll(PDO::FETCH_ASSOC);
+        var_dump($result[0]['firstname']);
+        return $result[0]['firstname'];
     }
     public function getLastName()
     {
-        $request = $this->mysqli->query("SELECT lastname FROM utilisateurs WHERE id='$_SESSION[id]'");
-        $result = $request->fetch_all(MYSQLI_ASSOC);
-        return $result;
+        $req = $this->bd->prepare("SELECT * FROM utilisateurs WHERE login = ?");
+        $req->execute([$_SESSION['login']]);
+        $result = $req->fetchAll(PDO::FETCH_ASSOC);
+        var_dump($result[0]['lastname']);
+        return $result[0]['lastname'];
     }
 }
 
 $user=new UserPDO();
-
-// // $user->register('cam6','cam6', 'cam@6', 'cam6', 'cam6');
-// // $user->register('cam11','cam11', 'cam11@', 'cam11', 'cam11');
+var_dump($_SESSION);
+// $user->register("cam1","cam1", "cam1@", "cam1", "cam1");
+// $user->register("cam22","cam22", "cam22@", "cam22", "cam22");
+// $user->register('cam6','cam6', 'cam@6', 'cam6', 'cam6');
 // // $user->register('cam2222','cam222', 'cam222@', 'cam222', 'cam222');
-// $user->connect('cam222','cam222');
-
-
-// // $user->disconnect();
-// // $user->delete();
-// // $user->update('cam20', 'cam20', 'cam20@', 'cam20', 'cam20' )
+// $user->connect("cam20","cam20");
+// $user->disconnect();
+// $user->delete();
+// $user->update('cam20', 'cam20', 'cam20@', 'cam20', 'cam20');
+// $user->isConnected();
+// $user->getAllInfos();
 // $user->getLogin();
-// // $user->getAllInfos();
+// $user->getEmail();
+// $user->getFirstname();
+// $user->getLastname();
+
